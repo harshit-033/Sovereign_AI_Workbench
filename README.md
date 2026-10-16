@@ -1,339 +1,140 @@
-# Local AI Workbench
+# Sovereign AI Workbench
 
-Local AI Workbench is a Windows application for chatting with a local large language model, analyzing PDF files, extracting text from scanned documents with OCR, and searching a private local knowledge base.
+Sovereign AI Workbench is a privacy-first, locally hosted AI application for chatting with a local language model, analyzing PDF documents, extracting text from scanned pages, searching a private document knowledge base, and running bounded, verifiable agent tasks.
 
-It includes:
+The application is designed to keep normal inference and document processing on the user's own computer through [Ollama](https://ollama.com/). It provides both a browser-based interface served locally over a trusted network and a lightweight Tkinter desktop client.
 
-- A browser-based application for one or more users on a trusted LAN.
-- A standalone Tkinter desktop application for local chat and document analysis.
-- Streaming answers, so text appears while the model is generating it.
-- PDF text extraction with Tesseract OCR fallback for scanned pages.
-- Knowledge Chat using local embeddings and ChromaDB.
-- A bounded Agent Task mode for local calculations, document search, and verified TXT/PDF reports.
+## Features
 
-All normal inference and document processing runs on the host computer through Ollama. No cloud AI API is required at runtime.
+- **Local AI chat:** stream answers from an Ollama-hosted language model.
+- **Document analysis:** extract text from PDFs and use Tesseract OCR for scanned pages.
+- **Retrieval-augmented generation (RAG):** index local documents and ask questions grounded in the indexed content, with source and page references.
+- **Agent tasks:** use a restricted workflow for calculations, authorized document search, and generated TXT/PDF reports.
+- **Browser and desktop clients:** use the FastAPI web interface or standalone Tkinter application.
+- **Local user management:** authenticated sessions and user-level separation for documents and knowledge collections.
+- **Security-conscious execution:** bounded inputs and agent capabilities; uploaded document content is treated as untrusted data.
 
-## Contents
+## Technology
 
-- [How it works](#how-it-works)
-- [Requirements](#requirements)
-- [Install](#install)
-- [Start the application](#start-the-application)
-- [Use the application](#use-the-application)
-- [Use from another PC](#use-from-another-pc)
-- [Configuration](#configuration)
-- [Run tests](#run-tests)
-- [Project structure](#project-structure)
-- [Security and privacy](#security-and-privacy)
-- [Troubleshooting](#troubleshooting)
-- [Documentation](#documentation)
-
-## How it works
-
-~~~
-Browser or desktop client
-          |
-          v
- FastAPI server or app.py
-          |
-          +--> Ollama local chat model
-          +--> PDF extraction and Tesseract OCR
-          +--> ChromaDB local knowledge base
-          +--> Bounded Agent Task tools
-~~~
-
-The browser application is the full-featured interface. The desktop application keeps a smaller local workflow for general chat and direct PDF analysis.
+- Python
+- FastAPI
+- Ollama for local language-model inference
+- ChromaDB and local embeddings for retrieval
+- Tesseract OCR and PDF text extraction
+- HTML, CSS, and JavaScript for the browser interface
+- Tkinter for the desktop client
 
 ## Requirements
 
-- Windows 10 or Windows 11.
+- Windows 10/11 (the launch scripts and steps below use Windows PowerShell).
 - Python 3.10 or newer.
-- Ollama installed and running: https://ollama.com/
-- The Ollama chat model llama3.2:latest.
-- The Ollama embedding model nomic-embed-text:latest for Knowledge Chat.
-- Tesseract OCR for scanned PDFs. The application looks for a standard Windows installation such as C:\Program Files\Tesseract-OCR.
+- [Ollama](https://ollama.com/) installed and running.
+- Tesseract OCR installed for scanned-PDF OCR.
+- Python dependencies from `requirements.txt`.
 
-The first model download requires internet access. After the models and Python packages are installed, normal use can be offline.
+Download the required models once:
 
-Download the local models once:
-
-~~~
+```powershell
 ollama pull llama3.2
 ollama pull nomic-embed-text
-~~~
-
-Confirm that Ollama is available before starting the application:
-
-~~~
 ollama list
-~~~
+```
 
-## Install
+The first model download requires internet access. Once packages and models are present locally, normal inference and document processing can run without a cloud AI API.
+
+## Setup
 
 Clone the repository and create a virtual environment:
 
-~~~
-git clone https://github.com/your-account/local-ai-workbench.git
-cd local-ai-workbench
+```powershell
+git clone https://github.com/harshit-033/Sovereign_AI_Workbench.git
+cd Sovereign_AI_Workbench
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-~~~
+```
 
-If PowerShell does not allow virtual-environment activation, use the virtual-environment Python directly in every command:
+If PowerShell blocks virtual-environment activation, call the environment's Python directly:
 
-~~~
+```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-~~~
+```
 
-Python dependencies are pinned in requirements.txt. The project currently uses Python 3.14.3 in its verified development environment, while the code targets Python 3.10 or newer.
+## Run the application
 
-## Start the application
+### Browser interface
 
-### Browser application
-
-From the project root:
-
-~~~
+```powershell
 .\.venv\Scripts\python.exe run_server.py
-~~~
+```
 
-You can also run run_server.bat.
+Alternatively, run `run_server.bat`. Open the local URL printed by the server, usually:
 
-The terminal prints the local and LAN URLs. Open the local URL on the host computer:
-
-~~~
+```text
 http://localhost:8000
-~~~
+```
 
-On the first run, the terminal prints a one-time generated administrator password. There are no hardcoded default passwords or demo accounts. You can set the first administrator credentials before starting the server:
+The terminal provides the initial administrator credentials when a new installation requires bootstrap. Configure credentials through the supported environment variables before launch if needed; use a strong, unique password.
 
-~~~
-$env:LOCAL_AI_BOOTSTRAP_ADMIN_USERNAME = "admin"
-$env:LOCAL_AI_BOOTSTRAP_ADMIN_PASSWORD = "Use-A-Long-Unique-Password"
-.\.venv\Scripts\python.exe run_server.py
-~~~
+### Desktop client
 
-### Desktop application
-
-To start the Tkinter desktop client:
-
-~~~
+```powershell
 .\.venv\Scripts\python.exe app.py
-~~~
+```
 
-You can also run run_chat_app.bat.
+Alternatively, run `run_chat_app.bat`.
 
-The desktop client supports general chat and direct PDF document analysis. It uses the local Ollama model and streams the answer as it is generated.
+## Project layout
 
-## Use the application
+```text
+agent/          Restricted planning, tools, approvals, audit, and outputs
+core/           Authentication, sessions, file handling, queues, and AI services
+document/       PDF loading, extraction, OCR, and document models
+rag/            Chunking, embeddings, metadata, vector storage, and retrieval
+routing/        Request classification and capability routing
+server/         FastAPI endpoints and server-side application logic
+static/         Browser UI (HTML, CSS, and JavaScript)
+tests/          Functional, document, retrieval, routing, and security tests
+app.py          Tkinter desktop client
+run_server.py   Browser-server launcher
+requirements.txt Python dependencies
+SERVER_GUIDE.md Server operation, configuration, and security reference
+```
 
-### General Chat
+## Configuration and data
 
-1. Sign in to the browser application, or open the desktop application.
-2. Select General Chat.
-3. Type a question and press Send.
-4. Read the answer while it streams from the local model.
+The application supports environment-based configuration for the chat model, embedding model, host and port, user-store location, upload directory, RAG storage, agent mode, API documentation, and TLS settings. See [SERVER_GUIDE.md](SERVER_GUIDE.md) for the detailed options.
 
-### Document Analysis
-
-1. Select Document Analysis.
-2. Upload or drag and drop a PDF file.
-3. Wait for the document to finish processing.
-4. Ask questions about the selected document.
-
-Digital PDFs use native text extraction. Scanned pages are rendered locally and processed with Tesseract OCR. Mixed PDFs can use both methods, page by page.
-
-### Knowledge Chat
-
-Knowledge Chat searches documents that have been indexed into the local knowledge base.
-
-1. Open Knowledge Chat.
-2. Create or select a collection.
-3. Upload a PDF or drag and drop it into the knowledge panel.
-4. Select Index PDF and wait for the status to become INDEXED.
-5. Ask a question about one or more indexed documents.
-
-Answers include source filenames, page numbers, and whether the source text came from native extraction or OCR. Each user's knowledge documents are isolated from other users.
-
-### Auto mode
-
-Auto chooses a capability based on the request:
-
-- Ordinary questions use General Chat.
-- Questions about the selected PDF use Document Analysis.
-- Cross-document requests such as Search my maintenance reports use Knowledge Chat.
-- Clear multi-step requests can use Agent Task.
-
-Explicit modes remain available when you want predictable behavior.
-
-### Agent Task
-
-Agent Task is a bounded local workflow for requests such as:
-
-~~~
-Calculate 18 * 24 and save the result as a TXT file.
-Summarize my indexed reports and create a PDF.
-~~~
-
-It can search authorized knowledge documents, inspect document metadata, perform restricted arithmetic, and generate verified TXT/PDF files. It cannot execute shell commands, arbitrary Python, network requests, browser actions, or unrestricted filesystem operations.
-
-## Use from another PC
-
-Both computers must be on the same trusted private network.
-
-1. Start the server on the host computer.
-2. Run ipconfig on the host and find the IPv4 address of the active Wi-Fi or Ethernet adapter.
-3. From the other PC, open http://HOST_IP:8000, replacing HOST_IP with that address. For example: http://192.168.1.23:8000.
-
-Do not use 127.0.0.1 from another PC. It always refers to the computer making the request.
-
-If the launcher cannot detect the correct address, set it explicitly before starting:
-
-~~~
-$env:LOCAL_AI_LAN_IP = "192.168.1.23"
-.\.venv\Scripts\python.exe run_server.py
-~~~
-
-If Windows Firewall blocks the connection, allow the server port on the host. Run this from an Administrator PowerShell only on a trusted private network:
-
-~~~
-New-NetFirewallRule -DisplayName "Local AI Workbench 8000" -Direction Inbound -Protocol TCP -LocalPort 8000 -Action Allow -Profile Private
-~~~
-
-Plain HTTP should only be used on localhost or a trusted private LAN. For an untrusted network, configure HTTPS using the TLS variables below.
-
-## Configuration
-
-Set environment variables in PowerShell before starting the server. The most useful options are:
-
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| LOCAL_AI_MODEL_NAME | Default Ollama chat model | llama3.2:latest |
-| LOCAL_AI_EMBED_MODEL | Ollama embedding model | nomic-embed-text:latest |
-| LOCAL_AI_SERVER_HOST | Server bind address | 0.0.0.0 |
-| LOCAL_AI_SERVER_PORT | Server port | 8000 |
-| LOCAL_AI_LAN_IP | Override detected private LAN IP | Auto-detected |
-| LOCAL_AI_USER_STORE_PATH | Account JSON file location | %LOCALAPPDATA%\LocalAIWorkbench\users.json |
-| LOCAL_AI_UPLOAD_DIR | Temporary uploaded-file directory | Project uploads directory |
-| LOCAL_AI_RAG_STORAGE_PATH | ChromaDB storage directory | Project data/rag directory |
-| LOCAL_AI_RAG_ENABLED | Enable Knowledge Chat | 1 |
-| LOCAL_AI_AGENT_ENABLED | Enable Agent Task | 1 |
-| LOCAL_AI_ENABLE_API_DOCS | Enable /docs and OpenAPI | Disabled |
-| LOCAL_AI_TLS_CERT_FILE | HTTPS certificate path | Not set |
-| LOCAL_AI_TLS_KEY_FILE | HTTPS private-key path | Not set |
-
-Example HTTPS configuration:
-
-~~~
-$env:LOCAL_AI_TLS_CERT_FILE = "C:\certs\server.crt"
-$env:LOCAL_AI_TLS_KEY_FILE = "C:\certs\server.key"
-$env:LOCAL_AI_COOKIE_SECURE = "1"
-.\.venv\Scripts\python.exe run_server.py
-~~~
-
-For the complete configuration list and server details, see SERVER_GUIDE.md.
-
-## Data locations
-
-- Accounts: %LOCALAPPDATA%\LocalAIWorkbench\users.json.
-- Temporary direct-analysis uploads: uploads by default.
-- Persistent Knowledge Chat files, vectors, and metadata: data/rag by default.
-- Agent outputs: data/agent_outputs/<session_id> by default.
-
-The project does not use PostgreSQL, MySQL, MongoDB, or another SQL database. Account data is stored in JSON, and document embeddings are stored locally in ChromaDB.
+Uploaded documents, account data, embeddings, and generated outputs may contain private information. Runtime data should remain local and should not be committed to the repository. This repository excludes the sample RAG uploads and metadata; the knowledge base can be populated through the application.
 
 ## Run tests
 
-Create the deterministic PDF fixtures first:
+Generate deterministic PDF fixtures:
 
-~~~
+```powershell
 .\.venv\Scripts\python.exe .\tests\create_synthetic_pdfs.py
-~~~
+```
 
-Run the test suite:
+Run the tests:
 
-~~~
+```powershell
 Get-ChildItem .\tests\test_*.py | ForEach-Object {
     & .\.venv\Scripts\python.exe $_.FullName
     if ($LASTEXITCODE -ne 0) { throw "$($_.Name) failed" }
 }
-~~~
+```
 
-The model QA test uses the real local Ollama model. Make sure Ollama is running and both models are installed before running the full suite.
+Tests that exercise actual model inference require Ollama and the configured models to be available.
 
-To audit installed Python packages:
+## Security notes
 
-~~~
-.\.venv\Scripts\python.exe -m pip install pip-audit
-.\.venv\Scripts\python.exe -m pip_audit -r requirements.txt
-~~~
+- Use the service on localhost or a trusted private LAN unless HTTPS is configured.
+- Use HTTPS before transmitting credentials over an untrusted network.
+- Protect uploaded documents, local user-store files, and generated outputs.
+- The agent workflow is intentionally restricted and should not be treated as an unrestricted shell or general-purpose code execution environment.
+- Review dependencies and run a security audit before production deployment.
 
-## Project structure
+## Scope
 
-~~~
-app.py                    Tkinter desktop client
-core/                     Authentication, sessions, files, queues, and AI services
-document/                 PDF extraction, OCR, context, and prompts
-rag/                      Chunking, embeddings, ChromaDB, and retrieval
-routing/                  Capability detection and request routing
-agent/                    Bounded planning, tools, approvals, audit, and outputs
-server/                   FastAPI routes, authentication, and streaming APIs
-static/                   Browser HTML, CSS, and JavaScript
-tests/                    Functional, OCR, model, isolation, and security tests
-run_server.py             LAN and HTTPS server launcher
-requirements.txt          Pinned Python dependencies
-SERVER_GUIDE.md           Detailed server and security reference
-FINAL_TECH_STACK.txt      Current technology-stack inventory
-~~~
-
-## Security and privacy
-
-- Passwords are hashed with scrypt. Legacy PBKDF2 hashes are migrated after a successful login.
-- Browser sessions use random server-side tokens in HttpOnly, SameSite cookies.
-- Tokens are not stored in browser storage or accepted in URLs.
-- Login attempts, uploads, document sizes, OCR work, model context, and agent execution are bounded.
-- User accounts, sessions, direct-analysis documents, and Knowledge Chat collections are isolated.
-- PDF content is treated as untrusted evidence. Instructions inside uploaded documents are not treated as application instructions.
-- API documentation is disabled by default.
-- Use HTTPS before sending credentials over an untrusted network.
-
-The current pinned ChromaDB version has unresolved advisories reported by pip-audit during the latest project verification. Review PHASE7_AGENT_REPORT.md before production deployment.
-
-## Troubleshooting
-
-### Ollama connection error
-
-Make sure Ollama is running and verify the installed models:
-
-~~~
-ollama list
-~~~
-
-If a custom model is installed, set LOCAL_AI_MODEL_NAME before starting the server.
-
-### OCR is unavailable
-
-Install Tesseract OCR for Windows and confirm that tesseract.exe is available at the expected installation path. Restart the application after installation.
-
-### Knowledge Chat cannot index a PDF
-
-Check that nomic-embed-text:latest is installed and that LOCAL_AI_RAG_ENABLED is not set to 0. The server health page at /health reports whether the LLM, OCR, and RAG services are ready.
-
-### Another PC cannot open the LAN URL
-
-Use the host's private IPv4 address, not 127.0.0.1. Confirm that both computers are on the same network, the server is bound to 0.0.0.0, and Windows Firewall allows the selected port.
-
-### The browser is unavailable after a restart
-
-Start run_server.py again and open the URL printed in the terminal. The server must remain running while the browser application is in use.
-
-## Documentation
-
-- SERVER_GUIDE.md: server operation, roles, API behavior, security, and advanced configuration.
-- DOCUMENT_WORKFLOW_CHECKLIST.md: document and OCR workflow checks.
-- FINAL_TECH_STACK.txt: exact current technology stack and versions.
-- PHASE7_AGENT_REPORT.md: latest Agent Task implementation and verification status.
-
-
+Sovereign AI Workbench is a general-purpose local AI and document-intelligence project. It does not require a hackathon, competition, or event-specific workflow to run.
